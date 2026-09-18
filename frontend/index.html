@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeatherGPT - Conversational Atmospheric Intelligence</title>
+  
+  <!-- Open Graph & Meta -->
+  <meta name="description" content="Production-quality conversational weather intelligence web MVP powered by real-time Open-Meteo telemetry.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌤️</text></svg>">
+  <meta name="theme-color" content="#090d16">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Application Stylesheet -->
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-layout">
+
+    <!-- Backdrop overlay for mobile sidebar -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-badge">
+          <div class="brand-icon-wrapper">
+            <svg class="brand-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+              <circle cx="12" cy="7" r="2.5" fill="currentColor" fill-opacity="0.2"/>
+            </svg>
+          </div>
+          <div class="brand-meta">
+            <span class="brand-title">WeatherGPT</span>
+            <span class="brand-tag">AI Weather Intelligence</span>
+          </div>
+        </div>
+        <button id="sidebarCloseBtn" class="icon-btn mobile-only" title="Close sidebar" aria-label="Close sidebar">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- New Chat Action -->
+      <div class="sidebar-action">
+        <button id="newChatBtn" class="new-chat-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <span>New Chat</span>
+        </button>
+      </div>
+
+      <!-- Recent Conversations / History -->
+      <div class="sidebar-section history-section">
+        <div class="section-heading">
+          <span>RECENT CHATS</span>
+          <button id="clearHistoryBtn" class="text-btn" title="Clear all chat history">Clear</button>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="history-empty" id="historyEmpty">No saved chats yet</div>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div class="provider-status">
+          <span class="status-pulse-dot"></span>
+          <div class="provider-text">
+            <span class="provider-label">Data Provider</span>
+            <span class="provider-name">Open-Meteo (Real-Time)</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CHAT & CONTENT AREA -->
+    <main class="main-content">
+      
+      <!-- Top Navigation Bar -->
+      <header class="top-nav">
+        <div class="top-nav-left">
+          <button id="sidebarToggleBtn" class="icon-btn mobile-menu-btn" title="Open Sidebar" aria-label="Open Sidebar">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div class="desktop-brand">
+            <span class="desktop-brand-title">WeatherGPT</span>
+          </div>
+        </div>
+
+        <!-- Selected Location Pill & Changer Trigger -->
+        <div class="top-nav-center">
+          <button id="locationSelectorBtn" class="location-pill-btn" title="Change Location">
+            <span class="loc-pin">📍</span>
+            <span class="loc-name" id="currentLocationName">Chennai, IN</span>
+            <span class="loc-separator">·</span>
+            <span class="loc-metrics" id="currentLocationMetrics">Loading...</span>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="loc-chevron"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        </div>
+
+        <div class="top-nav-right">
+          <div class="telemetry-badge" title="Live weather data fetched directly from Open-Meteo">
+            <span class="telemetry-dot"></span>
+            <span>Live Data</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Chat Conversation Container -->
+      <section class="chat-container" id="chatContainer">
+        
+        <!-- Welcome Hero (Shown when conversation is empty) -->
+        <div class="welcome-screen" id="welcomeScreen">
+          <div class="welcome-badge">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.75">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+              <circle cx="12" cy="7" r="2.5" fill="currentColor" fill-opacity="0.15"/>
+            </svg>
+          </div>
+          <h1 class="welcome-title">What can I help you with?</h1>
+          <p class="welcome-subtitle">
+            Ask WeatherGPT about the weather anywhere in the world. Get real-time conditions,
+            forecasts, rain chances, and practical weather guidance.
+          </p>
+
+          <!-- Suggested Prompt Cards -->
+          <div class="suggested-prompts-grid">
+            <button class="prompt-card" data-prompt="What's the weather right now?">
+              <div class="prompt-card-icon">🌤️</div>
+              <div class="prompt-card-content">
+                <span class="prompt-card-title">What's the weather?</span>
+                <span class="prompt-card-desc">Current temperature, humidity & conditions</span>
+              </div>
+            </button>
+
+            <button class="prompt-card" data-prompt="Is it going to rain?">
+              <div class="prompt-card-icon">🌧️</div>
+              <div class="prompt-card-content">
+                <span class="prompt-card-title">Is it raining?</span>
+                <span class="prompt-card-desc">Rain status & precipitation probabilities</span>
+              </div>
+            </button>
+
+            <button class="prompt-card" data-prompt="Show me the 7-day forecast">
+              <div class="prompt-card-icon">📅</div>
+              <div class="prompt-card-content">
+                <span class="prompt-card-title">7-Day Forecast</span>
+                <span class="prompt-card-desc">Upcoming highs, lows, and weather outlook</span>
+              </div>
+            </button>
+
+            <button class="prompt-card" data-prompt="How is the weather tomorrow?">
+              <div class="prompt-card-icon">🌅</div>
+              <div class="prompt-card-content">
+                <span class="prompt-card-title">Weather tomorrow</span>
+                <span class="prompt-card-desc">Next-day predictions and rain chances</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Message Stream -->
+        <div class="chat-messages" id="chatMessages"></div>
+
+        <!-- Typing / Retrieving Indicator -->
+        <div class="typing-indicator-row hidden" id="typingIndicator">
+          <div class="bot-avatar">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+            </svg>
+          </div>
+          <div class="typing-bubble">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-text">Retrieving live atmospheric data...</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Bottom Chat Input Area -->
+      <footer class="chat-input-wrapper">
+        <form class="chat-input-form" id="chatForm">
+          <textarea
+            id="chatInput"
+            class="chat-input-field"
+            placeholder="Ask about current weather, temperature, rain, or 7-day forecast..."
+            rows="1"
+            autocomplete="off"
+            spellcheck="false"
+          ></textarea>
+          <button type="button" id="voiceBtn" class="chat-voice-btn" title="Use voice input" aria-label="Use voice input">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="3" width="6" height="11" rx="3"></rect>
+              <path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"></path>
+            </svg>
+          </button>
+          <button type="submit" id="sendBtn" class="chat-send-btn" title="Send message" aria-label="Send message" disabled>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="19" x2="12" y2="5"></line>
+              <polyline points="5 12 12 5 19 12"></polyline>
+            </svg>
+          </button>
+        </form>
+        <p class="input-disclaimer">
+          <strong>⚠️ WeatherGPT can make mistakes.</strong> Weather forecasts are probabilistic and may change. For severe weather or safety-critical decisions, always follow official alerts from the India Meteorological Department (IMD) and local authorities.
+        </p>
+      </footer>
+
+    </main>
+
+  </div>
+
+  <!-- LOCATION SELECTION MODAL / DIALOG -->
+  <div class="modal-overlay hidden" id="locationModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2 class="modal-title">Select Location</h2>
+          <p class="modal-desc">Search any city worldwide or use your current location</p>
+        </div>
+        <button id="modalCloseBtn" class="icon-btn" title="Close" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Search Box -->
+      <div class="modal-search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="citySearchInput" class="modal-search-input" placeholder="Search city (e.g., Bengaluru, Tokyo, London)..." autocomplete="off">
+        <button id="clearSearchBtn" class="icon-btn clear-search-btn hidden" title="Clear">✕</button>
+      </div>
+
+      <!-- Geolocation "Use My Location" -->
+      <button id="useMyLocationBtn" class="geo-location-btn">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+        </svg>
+        <span>Use My Current Location (GPS)</span>
+        <span class="geo-status-indicator" id="geoStatus"></span>
+      </button>
+
+      <!-- Search Results Container -->
+      <div class="search-results-list hidden" id="searchResultsList"></div>
+
+      <!-- Preconfigured Hubs -->
+      <div class="modal-hub-section">
+        <span class="hub-label">Core Weather Hubs</span>
+        <div class="hub-chips-grid">
+          <button class="hub-chip" data-city="Chennai">Chennai</button>
+          <button class="hub-chip" data-city="Kanchipuram">Kanchipuram</button>
+          <button class="hub-chip" data-city="Bengaluru">Bengaluru</button>
+          <button class="hub-chip" data-city="Delhi">Delhi</button>
+          <button class="hub-chip" data-city="Mumbai">Mumbai</button>
+          <button class="hub-chip" data-city="Kolkata">Kolkata</button>
+          <button class="hub-chip" data-city="Hyderabad">Hyderabad</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Application Logic -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
