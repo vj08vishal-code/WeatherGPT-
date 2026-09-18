@@ -1,0 +1,16 @@
+# Environment variables & secrets (NEVER commit your .env file!)
+.env
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE / Editor folders
+.vscode/
+.idea/

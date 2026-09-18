@@ -1,0 +1,15 @@
+# Render.com Blueprint Deployment Configuration
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: weathergpt
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: OPENWEATHER_API_KEY
+        sync: false # Set in Render Dashboard or leave empty for Open-Meteo free fallback
